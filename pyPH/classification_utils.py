@@ -1,12 +1,15 @@
+"""
+@authors: Michael Poli, Stefano Massaroli
+"""
+
 import numpy as np
 from scipy.integrate import odeint
 from tqdm import tqdm_notebook as tqdm
 
-
 ############################################################################
 ###################### BASIC FUNCTIONS #####################################
-# Define linear neural network 
-def DumbNet(u,w):
+# Define simple neural network 
+def SimpleNet(u,w):
     # inputs
     u1 = u[0]
     u2 = u[1]
@@ -24,12 +27,11 @@ def DumbNet(u,w):
     y2 = w21*u1 + w22*u2 + w23
     return np.array([y1,y2]).T
 
-# Compute the value of the loss J
+# Compute the loss J
 def Loss(x,u,yh,a,b,c,n):
     w = x[0:n]
     dw = x[n:2*n]
-    J1 = np.array(yh-DumbNet(u,w))
-    #print(J1)
+    J1 = np.array(yh-SimpleNet(u,w))
     J = a*J1.dot(J1) + b*dw.dot(dw) + c*w.dot(w)
     return J
 
@@ -54,7 +56,7 @@ def Gradient(x,u,yh,a,b,c,n):
     w23 = w[5]
     #############################################
     # Compute gradient of J
-    y = DumbNet(u,w)
+    y = SimpleNet(u,w)
     dJ_w = 2.*a*np.array([u1*(y[0]-yh1),u2*(y[0]-yh1),y[0]-yh1,u1*(y[1]-yh2),u2*(y[1]-yh2),y[1]-yh2]).T
     #
     dJ_dw = np.array([2.*b*dw[0],2.*b*dw[1],2.*b*dw[2],2.*b*dw[3],2.*b*dw[4],2.*b*dw[5]]).T
@@ -113,20 +115,18 @@ def HamModBatch(x,t,bs,U,Yh,beta,a,b,c,n):
     F = np.vstack((np.hstack((On,In)),np.hstack((-In,-B))))
     # Compute the gradient
     dJ = GradientBatch(bs,x,U,Yh,a,b,c,n)
-    #print(dJ)
     # Compute derivative
     dxdt = F.dot(dJ)
     return dxdt
 
-    ###############################################################
-    ############# TRAINING ########################################
-
+###############################################################
+############# TRAINING ########################################
 def train(X,y,bs,epochs,x0,a,b,c,beta,n,t):
     N_tot = len(X)
     N_batch = int(N_tot/bs)
     Ub = X.reshape(N_batch,bs,2)
     Yhb = y.reshape(N_batch,bs,2)
-    # Initialise variable where to store results
+    # Initialize variable in which to store results
     xf = np.array([[1,1,1,1,1,1,1,1,1,1,1,1],x0], dtype='float')
     tf = np.array([0.])
     J = np.array([0.])
@@ -158,7 +158,7 @@ def test(x,Xh,yh,trained,train_test):
     N = len(yh)
     count_predicted = 0
     for i in range(N):
-        y = DumbNet(Xh[i],x)
+        y = SimpleNet(Xh[i],x)
         if (y[0]>y[1]) and (yh[i,0]>yh[i,1]):
             count_predicted += 1
     accuracy = count_predicted*100./N
@@ -175,8 +175,7 @@ def test(x,Xh,yh,trained,train_test):
             print('Pre-training test accuracy:',accuracy,'%')
     return accuracy
 
-    ################### EXPERIMENTAL ######################
-
+################### EXPERIMENTAL ######################
 def OutGradient(x,u,yh,a,b,c,n,C):
     # weights and their velocities
     w = x[0:n]
@@ -197,7 +196,7 @@ def OutGradient(x,u,yh,a,b,c,n,C):
     w23 = w[5]
     #############################################
     # Compute gradient of J
-    xh = DumbNet(u,w)
+    xh = SImpleNet(u,w)
     y = xh[0]*C[0] + xh[1]*C[1]
 
     dJ_w = 2.*a*np.array([u1*(y[0]-yh1),u2*(y[0]-yh1),y[0]-yh1,u1*(y[1]-yh2),u2*(y[1]-yh2),y[1]-yh2]).T
@@ -213,10 +212,8 @@ def OutGradientBatch(bs,x,U,Yh,a,b,c,n):
     dJ_tot = np.zeros((1,2*n))
     dJ_tot = dJ_tot[0] 
     for i in range(bs):
-        #print(i)
         u = U[i]
         yh = Yh[i]
-        #print(u,yh)
         dJ_tot = dJ_tot + OutGradient(x,u,yh,a,b,c,n)
         #print(Gradient(x,u,yh,a,b,c,n))
     return dJ_tot/bs 
@@ -229,7 +226,6 @@ def OutHamModBatch(x,t,bs,U,Yh,beta,a,b,c,n):
     F = np.vstack((np.hstack((On,In)),np.hstack((-In,-B))))
     # Compute the gradient
     dJ = OutGradientBatch(bs,x,U,Yh,a,b,c,n)
-    #print(dJ)
     # Compute derivative
     dxdt = F.dot(dJ)
     return dxdt
