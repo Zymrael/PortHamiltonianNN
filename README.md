@@ -1,5 +1,5 @@
 # PortHamiltonianNN
-Code for "Port-Hamiltonian Approach to Neural Network Training" submitted to IEEE CDC19
+Code for "Port-Hamiltonian Approach to Neural Network Training" submitted to 58th IEEE Conference on Decision and Control (CDC 2019)
 
 ### Requirements:
 
