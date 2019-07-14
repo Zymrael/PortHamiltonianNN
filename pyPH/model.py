@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Apr  4 04:43:01 2019
-
-@author: Michael Poli
-"""
 import sys
 import numpy as np
 from scipy.integrate import solve_ivp
@@ -18,11 +12,10 @@ if torch.cuda.is_available():
 else:
     device = torch.device('cpu')
 
-################################################################################################
-    
+
 class PHNN(nn.Module):
-    '''
-    High level wrapper for Hamiltonian Differential Neural Networks
+    """
+    High level wrapper for Port-Hamiltonian Differential Neural Networks
     
     :dense_layer: list of dimensions of linear layers of the chosen HDNN predictor \
     (e.g [12,24,2] for 12-dimensional inputs and output size 2)
@@ -31,7 +24,7 @@ class PHNN(nn.Module):
     :hparams: list [a,b,c] of loss function hyperparameters
     :beta: beta of F function of the weight dynamics
     :p_module: module name from which the predictor class is imported 
-    '''
+    """
     def __init__(self, p_type, p_args, hparams, beta, p_module=__name__):
       
         # initialize superclass method
@@ -112,7 +105,7 @@ class PHNN(nn.Module):
             del i1,i2,i3,i,v
             return F
           
-    def Gradient(self):
+    def gradient(self):
         itr = iter(self.predictor.parameters())
         dJddw = 2.*self.hparams[1]*self.flat_wdot
         dJ_reg = 2.*self.hparams[2]*self.flat_w
@@ -228,7 +221,7 @@ class PHNN(nn.Module):
         del loss, yhat
         
         #manual gradient w.r.t wdot and assignment to flat gradient vectors
-        self.Gradient()
+        self.gradient()
         self.assignFlatGradient()
         grad_flat = self.getConcatGradient()
         
@@ -246,7 +239,7 @@ class PHNN(nn.Module):
         return dxdt
     
     def fit(self, trainloader, epoch=3, time_delta=1, iter_accuracy=10, ode_t=0.25, ode_step=10, criterion='nll'):
-        '''
+        """
         :trainloader: DataLoader with training data
         :epoch: number of training epochs
         :time_delta: time steps required for a single recording of loss and parameters. Higher is better for speed. If None, no plotting
@@ -255,7 +248,7 @@ class PHNN(nn.Module):
         :ode_t: number of odeint time steps (per batch)
         :ode_step: number of odeint time steps (per batch)
         :criterion: nll for negative log-likelihood, mse for mean-square error
-        '''        
+        """
         if criterion == 'nll': self.criterion = F.nll_loss 
         else: self.criterion = F.mse_loss         
         t = np.linspace(0., ode_t, ode_step) 

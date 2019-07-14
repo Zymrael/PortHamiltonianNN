@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Jan 27 13:40:34 2019
-
-@author: Zymieth
-"""
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -13,14 +7,15 @@ if torch.cuda.is_available():
 else:
     device = torch.device('cpu')
     
-# predictor class 
+
 class MLP(nn.Module):
     def __init__(self, dense_layers, softmax = True):
-        '''
+        """
         Simple dense MLP class used as predictor
         
-        :smax_l: leave True for softmax applied to ouput
-        '''
+        smax_l: whether softmax is to be applied to the output layer
+        """
+
         super().__init__()
         self.dense_layers = nn.ModuleList([nn.Linear(dense_layers[i], dense_layers[i + 1]) \
                                            for i in range(len(dense_layers) - 1)])
@@ -36,13 +31,5 @@ class MLP(nn.Module):
             x = F.softplus(l_x, beta=10,threshold=20)
         if not self.softmax: return l_x
         else: return F.log_softmax(l_x, dim=-1)
-    
-def genpoints(xmin,xmax,ymin,ymax,number_points):
-    xx = torch.linspace(xmin,xmax,number_points)
-    yy = torch.linspace(ymin,ymax,number_points)
-    c = 1
-    P = []
-    for i in range(number_points):
-        for j in range(number_points):
-            P.append([xx[i],yy[j]])
-    return torch.Tensor(P).to(device)
+
+
