@@ -1,6 +1,8 @@
 # PortHamiltonianNN
 
-![weight dynamics](img/dyn.gif?style=centerme)
+<p align="center"> 
+<img src="img/dyn.gif">
+</p>
 
 Code for "Port-Hamiltonian Approach to Neural Network Training" submitted to 58th IEEE Conference on Decision and Control (CDC 2019)
 
