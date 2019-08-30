@@ -6,83 +6,68 @@ from scipy.integrate import odeint
 from tqdm import tqdm_notebook as tqdm
 
 
-############################################################################
-###################### BASIC FUNCTIONS #####################################
-# Define simple neural network 
-def simple_net(u,w):
+def simple_net(u, w):
+    """Simple linear neural network"""
     # inputs
-    u1 = u[0]
-    u2 = u[1]
+    u1, u2 = u[0], u[1]
     # weights of y1
-    w11 = w[0]
-    w12 = w[1]
-    w13 = w[2]
+    w11, w12, w13 = w[0], w[1], w[2]
     # weights of y2
-    w21 = w[3]
-    w22 = w[4]
-    w23 = w[5]
-    ############
-    # Compute output
+    w21, w22, w23 = w[3], w[4], w[5]
+
     y1 = w11*u1 + w12*u2 + w13
     y2 = w21*u1 + w22*u2 + w23
     return np.array([y1,y2]).T
 
 
-# Compute the loss J
-def loss(x,u,yh,a,b,c,n):
-    w = x[0:n]
-    dw = x[n:2*n]
-    J1 = np.array(yh-simple_net(u,w))
-    J = a*J1.dot(J1) + b*dw.dot(dw) + c*w.dot(w)
-    return J
+def loss(x, u, yh, a, b, c, n):
+    """Computes loss J"""
+    w, dw = x[0:n], x[n:2*n]
+    J = np.array(yh - simple_net(u, w))
+    loss = a*J.dot(J) + b*dw.dot(dw) + c*w.dot(w)
+    return loss
 
 
-# Compute the gradient of the loss J
-def gradient(x,u,yh,a,b,c,n):
+def gradient(x, u, yh, a, b, c):
+    """Computes gradient of the loss J"""
+    # x contains weights AND momenta
+    n = len(x)//2
     # weights and their velocities
-    w = x[0:n]
-    dw = x[n:2*n]
+    w, dw = x[0:n], x[n:2*n]
     # inputs
-    u1 = u[0]
-    u2 = u[1]
+    u1, u2 = u[0], u[1]
     # ground truth (reference outputs)
-    yh1 = yh[0]
-    yh2 = yh[1]
+    yh1, yh2 = yh[0], yh[1]
     # weights of y1
-    w11 = w[0]
-    w12 = w[1]
-    w13 = w[2]
+    w11, w12, w13 = w[0], w[1], w[2]
     # weights of y2
-    w21 = w[3]
-    w22 = w[4]
-    w23 = w[5]
-    #############################################
-    # Compute gradient of J
-    y = simple_net(u,w)
-    dJ_w = 2.*a*np.array([u1*(y[0]-yh1),u2*(y[0]-yh1),y[0]-yh1,u1*(y[1]-yh2),u2*(y[1]-yh2),y[1]-yh2]).T
+    w21, w22, w23 = w[3], w[4], w[5]
+
+    y = simple_net(u, w)
+    # gradient computation
+    dJ_w = 2.*a*np.array([u1*(y[0]-yh1), u2*(y[0]-yh1), y[0]-yh1, u1*(y[1]-yh2), u2*(y[1]-yh2), y[1]-yh2]).T
     #
-    dJ_dw = np.array([2.*b*dw[0],2.*b*dw[1],2.*b*dw[2],2.*b*dw[3],2.*b*dw[4],2.*b*dw[5]]).T
-    dJ = np.hstack((dJ_w,dJ_dw)).T
+    dJ_dw = np.array([2.*b*dw[0], 2.*b*dw[1], 2.*b*dw[2], 2.*b*dw[3], 2.*b*dw[4], 2.*b*dw[5]]).T
+    dJ = np.hstack((dJ_w, dJ_dw)).T
     # regularisation term
-    dJr = np.array([2.*c*w11,2.*c*w12,2.*c*w13,2.*c*w21,2.*c*w22,2.*c*w23,0.,0.,0.,0.,0.,0.])
+    dJr = np.array([2.*c*w11, 2.*c*w12, 2.*c*w13, 2.*c*w21, 2.*c*w22, 2.*c*w23, 0., 0., 0., 0., 0., 0.])
+    return dJ + dJr
 
-    return dJ+dJr
 
-
-# Define the PH model (ODE)
-def hamiltonian_model(x,t,u,yh,beta,a,b,c,n):
+def hamiltonian_model(x, u, yh, beta, a, b, c):
+    """Defines ODE of the PH Model"""
+    n = len(x)//2
     # Compute the gradient
-    dJ = gradient(x,u,yh,a,b,c,n)
+    dJ = gradient(x, u, yh, a, b, c)
     # Compute derivative
     dwdt = dJ[n:2*n]/b
     ddwdt = -dJ[0:n] - beta*dJ[n:2*n]/b
-    dxdt = np.hstack((dwdt,ddwdt))
+    dxdt = np.hstack((dwdt, ddwdt))
     return dxdt
 
 
-############################################################################
-###################### BATCH TRAINING FUNCTIONS ############################
 def loss_batch(bs,x,U,Yh,a,b,c,n):
+    """Calculates loss J for a batch"""
     J_tot = 0
     for i in range(bs):
         u = U[i]
@@ -115,9 +100,9 @@ def ham_mod_batch(x,t,bs,U,Yh,beta,a,b,c,n):
     return dxdt
 
 
-###############################################################
-############# TRAINING ########################################
+
 def train(X,y,bs,epochs,x0,a,b,c,beta,n,t):
+    """Trains a PHNN"""
     N_tot = len(X)
     N_batch = int(N_tot/bs)
     Ub = X.reshape(N_batch,bs,2)
@@ -151,6 +136,7 @@ def train(X,y,bs,epochs,x0,a,b,c,beta,n,t):
 
 
 def test(x,Xh,yh,trained,train_test):
+    """Performs evaluation on out-of-sample data"""
     N = len(yh)
     count_predicted = 0
     for i in range(N):

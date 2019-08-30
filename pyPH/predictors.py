@@ -2,20 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-if torch.cuda.is_available():
-    device = torch.device('cuda')
-else:
-    device = torch.device('cpu')
-    
-
 class MLP(nn.Module):
     def __init__(self, dense_layers, softmax = True):
-        """
-        Simple dense MLP class used as predictor
-        
-        smax_l: whether softmax is to be applied to the output layer
-        """
-
+        """Simple dense MLP class used as predictor"""
         super().__init__()
         self.dense_layers = nn.ModuleList([nn.Linear(dense_layers[i], dense_layers[i + 1]) \
                                            for i in range(len(dense_layers) - 1)])

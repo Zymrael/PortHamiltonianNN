@@ -138,8 +138,8 @@ class PHNN(nn.Module):
     
     def flattenGradient(self):
         dJ = self.dJ[0].view(-1)
-        for i in range(1,self.len):
-            dJ = torch.cat((dJ,self.dJ[i].view(-1)))
+        for i in range(1, self.len):
+            dJ = torch.cat((dJ, self.dJ[i].view(-1)))
         return dJ.to(device), self.dJddw.to(device)
     
     def assignFlatGradient(self):
