@@ -7,11 +7,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from .predictors import MLP
 
-if torch.cuda.is_available():
-    device = torch.device('cuda')
-else:
-    device = torch.device('cpu')
-
 
 class PHNN(nn.Module):
     """
@@ -25,16 +20,17 @@ class PHNN(nn.Module):
     :beta: beta of F function of the weight dynamics
     :p_module: module name from which the predictor class is imported 
     """
-    def __init__(self, p_type, p_args, hparams, beta, p_module=__name__):
+    def __init__(self, p_type, p_args, hparams, beta, p_module=__name__, device):
       
         # initialize superclass method
         super().__init__()
-        
+        self.device = device
+
         # predictor initialization
         self.p_type = getattr(sys.modules[p_module], p_type)
         self.p_args = p_args
         
-        self.predictor = self.p_type(*self.p_args).to(device)
+        self.predictor = self.p_type(*self.p_args).to(self.device)
         self.len = len(self.predictor.state_dict())
         self.lenp = sum(1 for _ in iter(self.predictor.parameters()))
                
@@ -62,9 +58,9 @@ class PHNN(nn.Module):
         itr = iter(self.predictor.parameters())
         for i in range(self.lenp):
             param = next(itr)
-            w.append(param.to(device))
+            w.append(param.to(self.device))
             if first_instance:
-                wdot.append(torch.rand((param.shape)).to(device))
+                wdot.append(torch.rand((param.shape)).to(self.device))
         if velocity == True: return w,wdot
         else: return w
     
@@ -123,7 +119,7 @@ class PHNN(nn.Module):
     def loadStateDict(self):    
         new_state_dict = self.makeStateDict()
         del self.predictor
-        self.predictor = self.p_type(*self.p_args).to(device)
+        self.predictor = self.p_type(*self.p_args).to(self.device)
         self.predictor.load_state_dict(new_state_dict)
         del new_state_dict
         
@@ -140,7 +136,7 @@ class PHNN(nn.Module):
         dJ = self.dJ[0].view(-1)
         for i in range(1, self.len):
             dJ = torch.cat((dJ, self.dJ[i].view(-1)))
-        return dJ.to(device), self.dJddw.to(device)
+        return dJ.to(self.device), self.dJddw.to(self.device)
     
     def assignFlatGradient(self):
         self.flat_dJ,self.flat_dJddw = self.flattenGradient()
@@ -153,7 +149,7 @@ class PHNN(nn.Module):
         self.y = y
         
     def setXi(self):
-        self.xi = torch.cat((self.flat_w.to(device), self.flat_wdot.to(device)))
+        self.xi = torch.cat((self.flat_w.to(self.device), self.flat_wdot.to(self.device)))
         
     def getParamShape(self):
         return self.shape
@@ -226,7 +222,7 @@ class PHNN(nn.Module):
         grad_flat = self.getConcatGradient()
         
         #actual ODE calcs
-        dxdt = torch.zeros(len(grad_flat)).to(device)
+        dxdt = torch.zeros(len(grad_flat)).to(self.device)
         n = len(dxdt)//2
         dxdt[:n] = grad_flat[n:2*n]
         dxdt[n:2*n] = -1*grad_flat[:n] -1*self.beta*grad_flat[n:2*n]
@@ -259,7 +255,7 @@ class PHNN(nn.Module):
         for e in range(epoch): 
             for i, data in enumerate(trainloader):               
                 x,y = data
-                x,y = x.to(device),y.to(device)                
+                x,y = x.to(self.device),y.to(self.device)
                 self.fixInputOutput(x,y)              
                 func = self
                 xi = solve_ivp(func, t, self.xi.cpu().detach().numpy())
