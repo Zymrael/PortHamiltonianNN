@@ -1,5 +1,10 @@
 # PortHamiltonianNN
 
+> A new framework for learning in which the neural network parameters are solutions of ODEs. By viewing the optimization process as the evolution of a port-Hamiltonian system we can ensure convergence to a minimum of the objective function. 
+
+This method is applicable to any generic neural network architecture. The neural network is coupled to a fictitious Port-Hamiltonian system with states equal to the parameters. The energy of the Port-Hamiltonian system is then linked to the objective function to optimize and automatically minimized due to the PH [passivity](https://en.wikipedia.org/wiki/Passivity_(engineering)) property.
+
+plt.scatter(hm[:,0], hm[:,1], s=2)
 <p align="center"> 
 <img src="img/dyn.gif">
 </p>
