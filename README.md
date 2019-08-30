@@ -1,12 +1,16 @@
 # PortHamiltonianNN
 
-![weight dynamics](img/dyn.gif)
+<p align="center"> 
+<img src="img/dyn.gif">
+</p>
 
 Code for "Port-Hamiltonian Approach to Neural Network Training" submitted to 58th IEEE Conference on Decision and Control (CDC 2019)
 
 
 ### Content:
 
-```pyPH/model.py``` contains the new optimizer class proposed in the paper. PHNNs can take as input nn.Modules and provides a fit method.
-
 ```pyPH/numpy_simple.py``` contains a numpy implementation of a single linear predictor along with functions that describe the Port-Hamiltonian ODE of its parameters. For general use import the PHNN class in ```pyPH/model.py``` instead.
+
+```pyPH/phnn.py``` contains the new optimizer class proposed in the paper. The class take as input PyTorch torch.nn.Modules and provides a fit method to optimize them as Port-Hamiltonian Neural Networks.
+
+
