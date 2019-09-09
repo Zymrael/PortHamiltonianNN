@@ -8,7 +8,7 @@ This method is applicable to any generic neural network architecture. The neural
 <img src="img/dyn.gif">
 </p>
 
-Code for "Port-Hamiltonian Approach to Neural Network Training" submitted to 58th IEEE Conference on Decision and Control (CDC 2019)
+Code for "Port-Hamiltonian Approach to Neural Network Training" submitted to 58th IEEE Conference on Decision and Control (CDC 2019). arXiv preprint available [here](https://arxiv.org/abs/1909.02702).
 
 
 ### Content:
