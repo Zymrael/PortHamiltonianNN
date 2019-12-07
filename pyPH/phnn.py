@@ -20,7 +20,7 @@ class PHNN(nn.Module):
     :beta: beta of F function of the weight dynamics
     :p_module: module name from which the predictor class is imported 
     """
-    def __init__(self, p_type, p_args, hparams, beta, p_module=__name__, device):
+    def __init__(self, p_type, p_args, hparams, beta, device, p_module=__name__):
       
         # initialize superclass method
         super().__init__()
